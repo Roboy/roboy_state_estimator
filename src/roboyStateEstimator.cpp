@@ -22,7 +22,7 @@ RoboyStateEstimator::~RoboyStateEstimator() {
 }
 
 void RoboyStateEstimator::estimateJointAngles(){
-    ros::Rate rate(60);
+    ros::Rate rate(100);
     moveit_msgs::DisplayRobotState msg;
     static int id = 0;
     msg.state.joint_state.header.frame_id = "world";
@@ -54,13 +54,13 @@ void RoboyStateEstimator::estimateJointAngles(){
         msg.state.joint_state.header.seq = id++;
         msg.state.joint_state.header.stamp = ros::Time::now();
 
-//        msg.state.joint_state.velocity[0] = (msg.state.joint_state.position[0]-ea.angles()[1])/rate.cycleTime().toSec();
-//        msg.state.joint_state.velocity[1] = (msg.state.joint_state.position[1]-(-ea.angles()[0]))/rate.cycleTime().toSec();
-//        msg.state.joint_state.velocity[2] = (msg.state.joint_state.position[2]-ea.angles()[2])/rate.cycleTime().toSec();
+        msg.state.joint_state.velocity[0] = (msg.state.joint_state.position[0]-ea.angles()[1])/0.01;
+        msg.state.joint_state.velocity[1] = (msg.state.joint_state.position[1]+ea.angles()[0])/0.01;
+        msg.state.joint_state.velocity[2] = (msg.state.joint_state.position[2]-ea.angles()[2])/0.01;
 
-        msg.state.joint_state.velocity[0] = 0;
-        msg.state.joint_state.velocity[1] = 0;
-        msg.state.joint_state.velocity[2] = 0;
+//        msg.state.joint_state.velocity[0] = 0;
+//        msg.state.joint_state.velocity[1] = 0;
+//        msg.state.joint_state.velocity[2] = 0;
 
         msg.state.joint_state.position[0] = ea.angles()[1];
         msg.state.joint_state.position[1] = -ea.angles()[0];
