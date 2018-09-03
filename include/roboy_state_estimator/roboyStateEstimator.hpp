@@ -16,6 +16,7 @@
 #include "Eigen/unsupported/EulerAngles.hpp"
 
 #include <thread>
+#include <std_msgs/Float32.h>
 
 using namespace Eigen;
 using namespace std;
@@ -39,6 +40,8 @@ public:
 private:
 
     bool getTransform(const char *from, const char *to, Matrix4d &transform);
+
+    void JointAngleCB(const std_msgs::Float32::ConstPtr &msg);
 //    /**
 //     * Subscriber callback for motor status
 //     * @param msg
@@ -84,7 +87,9 @@ private:
     ros::NodeHandlePtr nh;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     ros::Publisher robot_state_pub, joint_state_pub;
+    ros::Subscriber joint_angle_sub;
     boost::shared_ptr<boost::thread> joint_angle_estimator_thread;
     tf::TransformListener tf_listener;
+    float elbow_left =0;
 };
 

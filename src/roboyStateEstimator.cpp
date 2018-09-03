@@ -11,6 +11,7 @@ RoboyStateEstimator::RoboyStateEstimator() {
     spinner->start();
 
     robot_state_pub = nh->advertise<moveit_msgs::DisplayRobotState>("/display_robot_state", 1);
+    joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 
     joint_angle_estimator_thread.reset(new boost::thread(&RoboyStateEstimator::estimateJointAngles, this));
     joint_angle_estimator_thread->detach();
@@ -57,6 +58,7 @@ void RoboyStateEstimator::estimateJointAngles(){
         msg.state.joint_state.velocity[0] = (msg.state.joint_state.position[0]-ea.angles()[1])/0.01;
         msg.state.joint_state.velocity[1] = (msg.state.joint_state.position[1]+ea.angles()[0])/0.01;
         msg.state.joint_state.velocity[2] = (msg.state.joint_state.position[2]-ea.angles()[2])/0.01;
+        msg.state.joint_state.velocity[3] = (msg.state.joint_state.position[3]-elbow_left)/0.01;
 
 //        msg.state.joint_state.velocity[0] = 0;
 //        msg.state.joint_state.velocity[1] = 0;
@@ -65,6 +67,7 @@ void RoboyStateEstimator::estimateJointAngles(){
         msg.state.joint_state.position[0] = ea.angles()[1];
         msg.state.joint_state.position[1] = -ea.angles()[0];
         msg.state.joint_state.position[2] = ea.angles()[2];
+        msg.state.joint_state.position[3] = elbow_left;
 
 
         robot_state_pub.publish(msg);
@@ -87,6 +90,10 @@ bool RoboyStateEstimator::getTransform(const char *from, const char *to, Matrix4
     tf::transformTFToEigen(trans, trans_);
     transform = trans_.matrix();
     return true;
+}
+
+void RoboyStateEstimator::JointAngleCB(const std_msgs::Float32::ConstPtr &msg){
+    elbow_left = msg->data;
 }
 
 int main(int argc, char *argv[]) {
