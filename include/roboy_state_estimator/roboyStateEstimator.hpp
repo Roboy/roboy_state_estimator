@@ -8,15 +8,30 @@
 #include <moveit_msgs/DisplayRobotState.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 #include <tf_conversions/tf_eigen.h>
+#include <std_msgs/Float32.h>
 
 //Eigen
 #include <Eigen/Dense>
 #include <Eigen/Core>
 #include "Eigen/unsupported/EulerAngles.hpp"
-
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/aruco.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <vector>
 #include <thread>
-#include <std_msgs/Float32.h>
+
+static const std::string ZED_LEFT = "zed left", ZED_RIGHT = "zed right";
+using namespace cv;
+using namespace Eigen;
+using namespace std;
+
+
 
 using namespace Eigen;
 using namespace std;
@@ -36,60 +51,33 @@ public:
      */
     ~RoboyStateEstimator();
 
+    void leftCameraCB(const sensor_msgs::Image::ConstPtr &msg);
+
+    void rightCameraCB(const sensor_msgs::Image::ConstPtr &msg);
+
+    void detectAruco();
+
     void estimateJointAngles();
 private:
 
     bool getTransform(const char *from, const char *to, Matrix4d &transform);
 
     void JointAngleCB(const std_msgs::Float32::ConstPtr &msg);
-//    /**
-//     * Subscriber callback for motor status
-//     * @param msg
-//     */
-//    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
-//    /*
-//     * This function loads the controllers registered to the individual joint interfaces
-//     * @param controllers names of controllers
-//     * @return success
-//     */
-//    bool loadControllers(vector<string> controllers);
-//
-//    /*
-//     * This function unloads the controllers registered to the individual joint interfaces
-//     * @param controllers names of controllers
-//     * @return success
-//     */
-//    bool unloadControllers(vector<string> controllers);
-//
-//    /*
-//	 * This function starts the controllers registered to the individual joint interfaces
-//	 * @param controllers names of controllers
-//	 * @return success
-//	 */
-//    bool startControllers(vector<string> controllers);
-//
-//    /*
-//	 * This function stops the controllers registered to the individual joint interfaces
-//	 * @param controllers names of controllers
-//	 * @return success
-//	 */
-//    bool stopControllers(vector<string> controllers);
-//
-//    /**
-//     * This function initialises the requested motors
-//     */
-//    bool initializeControllers(roboy_communication_middleware::Initialize::Request &req,
-//                               roboy_communication_middleware::Initialize::Response &res);
-//
-//    bool updateTarget(roboy_communication_middleware::Initialize::Request &req,
-//                      roboy_communication_middleware::Initialize::Response &res);
 
     ros::NodeHandlePtr nh;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     ros::Publisher robot_state_pub, joint_state_pub;
-    ros::Subscriber joint_angle_sub;
+    ros::Subscriber joint_angle_sub, left_zed_camera_sub, right_zed_camera_sub;
+    cv_bridge::CvImagePtr zed_left_ptr, zed_right_ptr;
+    Mat camMatrix, distCoeffs;
+    Ptr<aruco::DetectorParameters> detectorParams;
+    Ptr<aruco::Dictionary> dictionary;
+    vector<int> arucoIDs;
+    float markerLength = 0.07f;
+    float K[9] = {687.8062263328862, 0.0, 320.5, 0.0, 687.8062263328862, 240.5, 0.0, 0.0, 1.0}, D[5] = {0, 0, 0, 0, 0};
     boost::shared_ptr<boost::thread> joint_angle_estimator_thread;
     tf::TransformListener tf_listener;
+    tf::TransformBroadcaster tf_broadcaster;
     float elbow_left =0;
 };
 

@@ -14,8 +14,14 @@ find_package(catkin REQUIRED COMPONENTS
 		common_utilities
 		geometry_msgs
 		moveit_msgs
+		aruco_detect
+		sensor_msgs
+		cv_bridge
+		std_msgs
+		image_transport
 		tf
-		tf_conversions )
+		tf_conversions
+		)
 catkin_package(CATKIN_DEPENDS message_runtime roboy_communication_middleware common_utilities INCLUDE_DIRS include)
 
 # Eigen

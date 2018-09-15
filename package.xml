@@ -12,6 +12,7 @@
     <depend>controller_interface</depend>
     <depend>roboy_communication_middleware</depend>
     <depend>common_utilities</depend>
+    <depend>opencv2</depend>
 
     <export>
     </export>
