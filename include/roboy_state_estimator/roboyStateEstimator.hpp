@@ -73,7 +73,7 @@ private:
     Ptr<aruco::DetectorParameters> detectorParams;
     Ptr<aruco::Dictionary> dictionary;
     vector<int> arucoIDs;
-    float markerLength = 0.07f;
+    float markerLength = 0.055f;
     float K[9] = {687.8062263328862, 0.0, 320.5, 0.0, 687.8062263328862, 240.5, 0.0, 0.0, 1.0}, D[5] = {0, 0, 0, 0, 0};
     boost::shared_ptr<boost::thread> joint_angle_estimator_thread;
     tf::TransformListener tf_listener;

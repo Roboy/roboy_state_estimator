@@ -14,8 +14,8 @@ RoboyStateEstimator::RoboyStateEstimator() {
     joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 //    camera_info_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 
-    left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color", 1, &RoboyStateEstimator::leftCameraCB, this);
-    right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color", 1, &RoboyStateEstimator::rightCameraCB, this);
+    left_zed_camera_sub = nh->subscribe("/zed/camera/left/image_raw_color", 1, &RoboyStateEstimator::leftCameraCB, this);
+    right_zed_camera_sub = nh->subscribe("/zed/camera/right/image_raw_color", 1, &RoboyStateEstimator::rightCameraCB, this);
 
     camMatrix = Mat(3, 3, CV_32FC1, K);
     distCoeffs = Mat(1, 5, CV_32FC1, D);
