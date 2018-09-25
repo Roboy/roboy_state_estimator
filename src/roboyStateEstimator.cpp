@@ -17,7 +17,7 @@ RoboyStateEstimator::RoboyStateEstimator() {
     left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color", 1, &RoboyStateEstimator::leftCameraCB, this);
     right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color", 1, &RoboyStateEstimator::rightCameraCB, this);
 
-    camMatrix = Mat(3, 3, CV_32FC1, K);
+    camMatrix = Mat(3, 3, CV_32FC1, K_left);
     distCoeffs = Mat(1, 5, CV_32FC1, D);
 
     detectorParams = aruco::DetectorParameters::create();
@@ -85,12 +85,12 @@ void RoboyStateEstimator::detectAruco() {
                 trans.setRotation(tf::Quaternion(0,0,0,1));
                 Quaterniond q_cv_coordinates_to_gazebo(0, 0, 0.7071068, 0.7071068);
                 Vector3d pos(tvecs[i][0], tvecs[i][1],tvecs[i][2]);
-                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
-                trans.setOrigin(tf::Vector3(pos[0],-pos[1],pos[2]));
+//                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
+                trans.setOrigin(tf::Vector3(pos[0],pos[1],pos[2]));
                 char str[100];
-                sprintf(str, "cup_zed_left_%d", ids[i]);
+                sprintf(str, "zed_left_aruco_%d", ids[i]);
                 tf_broadcaster.sendTransform(
-                        tf::StampedTransform(trans, ros::Time::now(), "zed_camera_left_lense", str));
+                        tf::StampedTransform(trans, ros::Time::now(), "zed_left_camera_optical_frame", str));
             }
         }
         cv::imshow(ZED_LEFT, zed_left_ptr->image);
@@ -120,12 +120,12 @@ void RoboyStateEstimator::detectAruco() {
                 trans.setRotation(tf::Quaternion(0,0,0,1));
                 Quaterniond q_cv_coordinates_to_gazebo(0, 0, 0.7071068, 0.7071068);
                 Vector3d pos(tvecs[i][0], tvecs[i][1],tvecs[i][2]);
-                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
-                trans.setOrigin(tf::Vector3(pos[0],-pos[1],pos[2]));
+//                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
+                trans.setOrigin(tf::Vector3(pos[0],pos[1],pos[2]));
                 char str[100];
-                sprintf(str, "cup_zed_right_%d", ids[i]);
+                sprintf(str, "zed_right_aruco_%d", ids[i]);
                 tf_broadcaster.sendTransform(
-                        tf::StampedTransform(trans, ros::Time::now(), "zed_camera_right_lense", str));
+                        tf::StampedTransform(trans, ros::Time::now(), "zed_right_camera_optical_frame", str));
             }
         }
         cv::imshow(ZED_RIGHT, zed_right_ptr->image);
