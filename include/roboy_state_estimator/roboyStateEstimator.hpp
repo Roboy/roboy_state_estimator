@@ -74,8 +74,8 @@ private:
     Ptr<aruco::Dictionary> dictionary;
     vector<int> arucoIDs;
     float markerLength = 0.07f;
-    float K_left[9] = {677.2230834960938, 0.0, 625.9386596679688, 0.0, 677.2230834960938, 388.9412841796875, 0.0, 0.0, 1.0},
-            D[5] = {0, 0, 0, 0, 0};
+    float K_left[9] = {700.5650024414062, 0.0, 639.5999755859375, 0.0, 700.5650024414062, 391.23699951171875, 0.0, 0.0, 1.0},
+            D[5] = {-0.17171600461006165, 0.024814900010824203, 0, 0, 0};
     boost::shared_ptr<boost::thread> joint_angle_estimator_thread;
     tf::TransformListener tf_listener;
     tf::TransformBroadcaster tf_broadcaster;
