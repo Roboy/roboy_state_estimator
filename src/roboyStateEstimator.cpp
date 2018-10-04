@@ -14,6 +14,8 @@ RoboyStateEstimator::RoboyStateEstimator() {
     joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 //    camera_info_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 
+
+
     left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color", 1, &RoboyStateEstimator::leftCameraCB, this);
     right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color", 1, &RoboyStateEstimator::rightCameraCB, this);
 
@@ -25,10 +27,6 @@ RoboyStateEstimator::RoboyStateEstimator() {
     detectorParams->cornerRefinementMaxIterations = 100;
     dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(cv::aruco::DICT_ARUCO_ORIGINAL));
 
-    cv::namedWindow(ZED_LEFT);
-    cv::namedWindow(ZED_RIGHT);
-    moveWindow(ZED_LEFT, 0, 0);
-    moveWindow(ZED_RIGHT, 700, 0);
 
 //    joint_angle_estimator_thread.reset(new boost::thread(&RoboyStateEstimator::estimateJointAngles, this));
 //    joint_angle_estimator_thread->detach();
@@ -47,6 +45,8 @@ void RoboyStateEstimator::leftCameraCB(const sensor_msgs::Image::ConstPtr &msg) 
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
+    cv::namedWindow(ZED_LEFT);
+    moveWindow(ZED_LEFT, 0, 0);
 }
 
 void RoboyStateEstimator::rightCameraCB(const sensor_msgs::Image::ConstPtr &msg) {
@@ -57,6 +57,8 @@ void RoboyStateEstimator::rightCameraCB(const sensor_msgs::Image::ConstPtr &msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
+    cv::namedWindow(ZED_RIGHT);
+    moveWindow(ZED_RIGHT, 700, 0);
 }
 
 void RoboyStateEstimator::detectAruco() {
