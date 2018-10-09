@@ -5,7 +5,7 @@ RoboyStateEstimator::RoboyStateEstimator() {
     if (!ros::isInitialized()) {
         int argc = 0;
         char **argv = NULL;
-        ros::init(argc, argv, "roboy", ros::init_options::NoRosout);
+        ros::init(argc, argv, "roboy_state_estimator", ros::init_options::NoRosout);
     }
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(0));
     spinner->start();
@@ -14,10 +14,15 @@ RoboyStateEstimator::RoboyStateEstimator() {
     joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 //    camera_info_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 
+    left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color/compressed", 1, &RoboyStateEstimator::leftCameraCB, this);
 
+    cv::namedWindow(ZED_LEFT);
+    moveWindow(ZED_LEFT, 0, 0);
 
-    left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color", 1, &RoboyStateEstimator::leftCameraCB, this);
-    right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color", 1, &RoboyStateEstimator::rightCameraCB, this);
+//    right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color/compressed", 1, &RoboyStateEstimator::rightCameraCB, this);
+//
+//    cv::namedWindow(ZED_RIGHT);
+//    moveWindow(ZED_RIGHT, 700, 0);
 
     camMatrix = Mat(3, 3, CV_32FC1, K_left);
     distCoeffs = Mat(1, 5, CV_32FC1, D);
@@ -37,7 +42,7 @@ RoboyStateEstimator::~RoboyStateEstimator() {
         joint_angle_estimator_thread->join();
 }
 
-void RoboyStateEstimator::leftCameraCB(const sensor_msgs::Image::ConstPtr &msg) {
+void RoboyStateEstimator::leftCameraCB(const sensor_msgs::CompressedImage::ConstPtr &msg) {
     try {
         zed_left_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     }
@@ -45,11 +50,9 @@ void RoboyStateEstimator::leftCameraCB(const sensor_msgs::Image::ConstPtr &msg) 
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    cv::namedWindow(ZED_LEFT);
-    moveWindow(ZED_LEFT, 0, 0);
 }
 
-void RoboyStateEstimator::rightCameraCB(const sensor_msgs::Image::ConstPtr &msg) {
+void RoboyStateEstimator::rightCameraCB(const sensor_msgs::CompressedImage::ConstPtr &msg) {
     try {
         zed_right_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     }
@@ -57,8 +60,6 @@ void RoboyStateEstimator::rightCameraCB(const sensor_msgs::Image::ConstPtr &msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    cv::namedWindow(ZED_RIGHT);
-    moveWindow(ZED_RIGHT, 700, 0);
 }
 
 void RoboyStateEstimator::detectAruco() {
@@ -80,14 +81,14 @@ void RoboyStateEstimator::detectAruco() {
                 }
                 aruco::drawAxis(zed_left_ptr->image, camMatrix, distCoeffs, rvecs[i], tvecs[i],
                                 markerLength * 0.5f);
-//                    double theta = sqrt(pow(rvecs[i][0], 2.0) + pow(rvecs[i][1], 2.0) + pow(rvecs[i][2], 2.0));
-//                    Quaterniond q(rvecs[i][0] / theta, rvecs[i][1] / theta, rvecs[i][2] / theta, theta);
-//                    q.normalize();
+                cv::Mat rot_mat = Mat::zeros(3,3,CV_64F);
+                cv::Rodrigues(rvecs[i], rot_mat);
+                Matrix3d rot;
+                cv::cv2eigen(rot_mat, rot);
+                Quaterniond q(rot);
                 tf::Transform trans;
-                trans.setRotation(tf::Quaternion(0,0,0,1));
-                Quaterniond q_cv_coordinates_to_gazebo(0, 0, 0.7071068, 0.7071068);
+                trans.setRotation(tf::Quaternion(q.x(),q.y(),q.z(),q.w()));
                 Vector3d pos(tvecs[i][0], tvecs[i][1],tvecs[i][2]);
-//                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
                 trans.setOrigin(tf::Vector3(pos[0],pos[1],pos[2]));
                 char str[100];
                 sprintf(str, "zed_left_aruco_%d", ids[i]);
@@ -97,41 +98,41 @@ void RoboyStateEstimator::detectAruco() {
         }
         cv::imshow(ZED_LEFT, zed_left_ptr->image);
     }
-    {
-        vector<int> ids;
-        vector<vector<Point2f> > corners, rejected;
-        vector<Vec3d> rvecs, tvecs;
-
-        // detect markers and estimate pose
-        aruco::detectMarkers(zed_right_ptr->image, dictionary, corners, ids, detectorParams, rejected);
-        aruco::estimatePoseSingleMarkers(corners, markerLength, camMatrix, distCoeffs, rvecs, tvecs);
-        // draw results
-        if (ids.size() > 0) {
-            aruco::drawDetectedMarkers(zed_right_ptr->image, corners, ids);
-            for (unsigned int i = 0; i < ids.size(); i++) {
-                if (!arucoIDs.empty()) {
-                    if (std::find(arucoIDs.begin(), arucoIDs.end(), ids[i]) == arucoIDs.end())
-                        continue;
-                }
-                aruco::drawAxis(zed_right_ptr->image, camMatrix, distCoeffs, rvecs[i], tvecs[i],
-                                markerLength * 0.5f);
-//                    double theta = sqrt(pow(rvecs[i][0], 2.0) + pow(rvecs[i][1], 2.0) + pow(rvecs[i][2], 2.0));
-//                    Quaterniond q(rvecs[i][0] / theta, rvecs[i][1] / theta, rvecs[i][2] / theta, theta);
-//                    q.normalize();
-                tf::Transform trans;
-                trans.setRotation(tf::Quaternion(0,0,0,1));
-                Quaterniond q_cv_coordinates_to_gazebo(0, 0, 0.7071068, 0.7071068);
-                Vector3d pos(tvecs[i][0], tvecs[i][1],tvecs[i][2]);
-//                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
-                trans.setOrigin(tf::Vector3(pos[0],pos[1],pos[2]));
-                char str[100];
-                sprintf(str, "zed_right_aruco_%d", ids[i]);
-                tf_broadcaster.sendTransform(
-                        tf::StampedTransform(trans, ros::Time::now(), "zed_right_camera_optical_frame", str));
-            }
-        }
-        cv::imshow(ZED_RIGHT, zed_right_ptr->image);
-    }
+//    {
+//        vector<int> ids;
+//        vector<vector<Point2f> > corners, rejected;
+//        vector<Vec3d> rvecs, tvecs;
+//
+//        // detect markers and estimate pose
+//        aruco::detectMarkers(zed_right_ptr->image, dictionary, corners, ids, detectorParams, rejected);
+//        aruco::estimatePoseSingleMarkers(corners, markerLength, camMatrix, distCoeffs, rvecs, tvecs);
+//        // draw results
+//        if (ids.size() > 0) {
+//            aruco::drawDetectedMarkers(zed_right_ptr->image, corners, ids);
+//            for (unsigned int i = 0; i < ids.size(); i++) {
+//                if (!arucoIDs.empty()) {
+//                    if (std::find(arucoIDs.begin(), arucoIDs.end(), ids[i]) == arucoIDs.end())
+//                        continue;
+//                }
+//                aruco::drawAxis(zed_right_ptr->image, camMatrix, distCoeffs, rvecs[i], tvecs[i],
+//                                markerLength * 0.5f);
+////                    double theta = sqrt(pow(rvecs[i][0], 2.0) + pow(rvecs[i][1], 2.0) + pow(rvecs[i][2], 2.0));
+////                    Quaterniond q(rvecs[i][0] / theta, rvecs[i][1] / theta, rvecs[i][2] / theta, theta);
+////                    q.normalize();
+//                tf::Transform trans;
+//                trans.setRotation(tf::Quaternion(0,0,0,1));
+//                Quaterniond q_cv_coordinates_to_gazebo(0, 0, 0.7071068, 0.7071068);
+//                Vector3d pos(tvecs[i][0], tvecs[i][1],tvecs[i][2]);
+////                pos = q_cv_coordinates_to_gazebo.matrix()*pos;
+//                trans.setOrigin(tf::Vector3(pos[0],pos[1],pos[2]));
+//                char str[100];
+//                sprintf(str, "zed_right_aruco_%d", ids[i]);
+//                tf_broadcaster.sendTransform(
+//                        tf::StampedTransform(trans, ros::Time::now(), "zed_right_camera_optical_frame", str));
+//            }
+//        }
+//        cv::imshow(ZED_RIGHT, zed_right_ptr->image);
+//    }
 }
 
 void RoboyStateEstimator::estimateJointAngles(){
@@ -184,7 +185,8 @@ void RoboyStateEstimator::estimateJointAngles(){
 
             robot_state_pub.publish(msg);
         }
-        if (zed_right_ptr != nullptr && zed_left_ptr != nullptr) {
+
+        if (zed_left_ptr != nullptr) {//zed_right_ptr != nullptr &&
             detectAruco();
             cv::waitKey(1);
         }

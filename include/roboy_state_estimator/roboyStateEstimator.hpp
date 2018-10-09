@@ -23,6 +23,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <vector>
 #include <thread>
 
@@ -51,9 +52,9 @@ public:
      */
     ~RoboyStateEstimator();
 
-    void leftCameraCB(const sensor_msgs::Image::ConstPtr &msg);
+    void leftCameraCB(const sensor_msgs::CompressedImage::ConstPtr &msg);
 
-    void rightCameraCB(const sensor_msgs::Image::ConstPtr &msg);
+    void rightCameraCB(const sensor_msgs::CompressedImage::ConstPtr &msg);
 
     void detectAruco();
 
@@ -72,7 +73,7 @@ private:
     Mat camMatrix, distCoeffs;
     Ptr<aruco::DetectorParameters> detectorParams;
     Ptr<aruco::Dictionary> dictionary;
-    vector<int> arucoIDs;
+    vector<int> arucoIDs = {69};
     float markerLength = 0.07f;
     float K_left[9] = {700.5650024414062, 0.0, 639.5999755859375, 0.0, 700.5650024414062, 391.23699951171875, 0.0, 0.0, 1.0},
             D[5] = {-0.17171600461006165, 0.024814900010824203, 0, 0, 0};
