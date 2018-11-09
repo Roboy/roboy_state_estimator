@@ -5,7 +5,7 @@
 
 // ros
 #include <ros/ros.h>
-#include <moveit_msgs/DisplayRobotState.h>
+#include <sensor_msgs/JointState.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
@@ -67,7 +67,7 @@ private:
 
     ros::NodeHandlePtr nh;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
-    ros::Publisher robot_state_pub, joint_state_pub;
+    ros::Publisher joint_state_pub;
     ros::Subscriber joint_angle_sub, left_zed_camera_sub, right_zed_camera_sub;
     cv_bridge::CvImagePtr zed_left_ptr, zed_right_ptr;
     Mat camMatrix, distCoeffs;
@@ -81,5 +81,6 @@ private:
     tf::TransformListener tf_listener;
     tf::TransformBroadcaster tf_broadcaster;
     float elbow_left =0;
+    bool first_time_camera_feed_left = true, first_time_camera_feed_right = true;
 };
 
