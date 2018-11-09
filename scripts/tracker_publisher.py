@@ -24,7 +24,10 @@ q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_
 while not rospy.is_shutdown():
     start = time.time()
     txt = ""
-    pose = v.devices["tracker_1"].get_pose_quaternion()
+    try:
+        pose = v.devices["tracker_1"].get_pose_quaternion()
+    except:
+        continue
 
     q_current = Quaternion(pose[6],pose[3],pose[4],pose[5])
 
@@ -37,8 +40,10 @@ while not rospy.is_shutdown():
                      rospy.Time.now(),
                      "tracker_1",
                      "world")
-
-    pose = v.devices["tracker_2"].get_pose_quaternion()
+    try:
+        pose = v.devices["tracker_2"].get_pose_quaternion()
+    except:
+        continue
 
     q_current = Quaternion(pose[6],pose[3],pose[4],pose[5])
 

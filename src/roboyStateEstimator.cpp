@@ -166,8 +166,8 @@ void RoboyStateEstimator::estimateJointAngles(){
     ros::Duration timeout(0.001);
     while(ros::ok()){
         Matrix4d trans;
-        if(tf_listener.waitForTransform("tracker_1","tracker_2",ros::Time::now(),timeout)) {
-            getTransform("tracker_1", "tracker_2", trans);
+        if(tf_listener.waitForTransform("world","shoulderOrientation",ros::Time::now(),timeout)) {
+            getTransform("world", "shoulderOrientation", trans);
             Matrix3d rot = trans.block(0, 0, 3, 3);
             ShoulderAngles ea(rot);
             ROS_INFO_STREAM_THROTTLE(1, endl << trans << endl << ea.angles().transpose());
