@@ -10,7 +10,7 @@ SET(CMAKE_BUILD_TYPE Debug)
 #==============================================================================
 find_package(catkin REQUIRED COMPONENTS
 		roscpp
-		roboy_communication_middleware
+		roboy_middleware_msgs
 		common_utilities
 		geometry_msgs
 		moveit_msgs
@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 		tf
 		tf_conversions
 		)
-catkin_package(CATKIN_DEPENDS message_runtime roboy_communication_middleware common_utilities INCLUDE_DIRS include)
+catkin_package(CATKIN_DEPENDS message_runtime roboy_middleware_msgs common_utilities INCLUDE_DIRS include)
 
 # Eigen
 find_package(PkgConfig REQUIRED )
@@ -39,7 +39,7 @@ include_directories(
 #==============================================================================
 add_executable(roboy_state_estimator include/roboy_state_estimator/roboyStateEstimator.hpp src/roboyStateEstimator.cpp)
 add_dependencies(roboy_state_estimator
-	roboy_communication_middleware_generate_messages_cpp
+	roboy_middleware_msgs_generate_messages_cpp
 )
 target_link_libraries(roboy_state_estimator ${catkin_LIBRARIES})
 #==============================================================================
