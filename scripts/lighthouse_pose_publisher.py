@@ -34,17 +34,11 @@ while not rospy.is_shutdown():
                      rospy.Time.now(),
                      "lighthouse1",
                      "world")
-    # br.sendTransform([pose[0][3],pose[1][3],pose[2][3]],
-    #                  tf.transformations.quaternion_from_matrix(pose),
-    #                  rospy.Time.now(),
-    #                  "lighthouse1_vive",
-    #                  "world")
     try:
         pose = v.devices["tracking_reference_2"].get_pose()
     except:
         continue
 
-    rotX = np.array([[1.0,0.0,0.0,0.0],[0.0,0.0,1.0,0.0],[0.0,-1.0,0.0,0.0],[0.0,0.0,0.0,1.0]])
     pose = np.array([pose[0][:4],pose[1][:4],pose[2][:4],[0.0,0.0,0.0,1.0]])
     pose_corrected = np.matmul(pose,rotX)
     q = tf.transformations.quaternion_from_matrix(pose_corrected)
@@ -54,8 +48,43 @@ while not rospy.is_shutdown():
                      rospy.Time.now(),
                      "lighthouse2",
                      "world")
-    # br.sendTransform([pose[0][3],pose[1][3],pose[2][3]],
-    #                  tf.transformations.quaternion_from_matrix(pose),
-    #                  rospy.Time.now(),
-    #                  "lighthouse2_vive",
-    #                  "world")
+    try:
+        pose = v.devices["tracker_1"].get_pose()
+    except:
+        continue
+
+    pose = np.array([pose[0][:4],pose[1][:4],pose[2][:4],[0.0,0.0,0.0,1.0]])
+    pose_corrected = np.matmul(pose,rotX)
+    q_tracker_1 = tf.transformations.quaternion_from_matrix(pose_corrected)
+
+    br.sendTransform([pose_corrected[0][3],pose_corrected[1][3],pose_corrected[2][3]],
+                     q_tracker_1,
+                     rospy.Time.now(),
+                     "tracker_1",
+                     "world")
+
+    try:
+        pose = v.devices["tracker_2"].get_pose()
+    except:
+        continue
+
+    pose = np.array([pose[0][:4],pose[1][:4],pose[2][:4],[0.0,0.0,0.0,1.0]])
+    pose_corrected = np.matmul(pose,rotX)
+    q_tracker_2 = tf.transformations.quaternion_from_matrix(pose_corrected)
+
+    br.sendTransform([pose_corrected[0][3],pose_corrected[1][3],pose_corrected[2][3]],
+                     q_tracker_2,
+                     rospy.Time.now(),
+                     "tracker_2",
+                     "world")
+
+    q_2 = Quaternion (q_tracker_2)
+    q_1 = Quaternion (q_tracker_1)
+
+    q_result = q_1*q_2.inverse
+    br.sendTransform([0,0,0.3],
+                     q_result,
+                     rospy.Time.now(),
+                     "top_estimate",
+                     "world")
+
