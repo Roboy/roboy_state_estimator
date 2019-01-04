@@ -31,12 +31,12 @@ while not rospy.is_shutdown():
 
     q_current = Quaternion(pose[6],pose[3],pose[4],pose[5])
 
-    q = q_current*q_init1.inverse
+    q_tracker_1 = q_current*q_init1.inverse
 
     pos = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
 
-    br.sendTransform([pos[0],pos[1],-pos[2]],
-                     (q[1],q[2],q[3],q[0]),
+    br.sendTransform([pos[0],pos[1],pos[2]],
+                     (q_tracker_1[1],q_tracker_1[2],q_tracker_1[3],q_tracker_1[0]),
                      rospy.Time.now(),
                      "tracker_1",
                      "world")
@@ -47,12 +47,20 @@ while not rospy.is_shutdown():
 
     q_current = Quaternion(pose[6],pose[3],pose[4],pose[5])
 
-    q = q_current*q_init2.inverse
+    q_tracker_2 = q_current*q_init2.inverse
 
     pos = np.array([pose[0]-initial_pose2[0],pose[1]-initial_pose2[1],pose[2]-initial_pose2[2]])
 
-    br.sendTransform([pos[0],pos[1],-pos[2]],
-                     (q[1],q[2],q[3],q[0]),
+    br.sendTransform([pos[0],pos[1],pos[2]],
+                     (q_tracker_2[1],q_tracker_2[2],q_tracker_2[3],q_tracker_2[0]),
                      rospy.Time.now(),
                      "tracker_2",
+                     "world")
+
+    q_result = q_tracker_2*q_tracker_1.inverse()
+
+    br.sendTransform([pos[0],pos[1],pos[2]],
+                     (q_result[1],q_result[2],q_result[3],q_result[0]),
+                     rospy.Time.now(),
+                     "top_estimate",
                      "world")
