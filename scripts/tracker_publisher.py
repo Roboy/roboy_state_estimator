@@ -5,11 +5,10 @@ import rospy
 import tf
 import numpy as np
 from pyquaternion import Quaternion
+rospy.init_node('tracker_tf_broadcaster')
 
 br = tf.TransformBroadcaster()
 li = tf.TransformListener()
-
-rospy.init_node('tracker_tf_broadcaster')
 
 v = triad_openvr.triad_openvr()
 v.print_discovered_objects()
@@ -20,6 +19,11 @@ initial_pose1 = v.devices["tracker_1"].get_pose_quaternion()
 initial_pose2 = v.devices["tracker_2"].get_pose_quaternion()
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
+
+X0 = np.array([1,0,0])
+X1 = np.array([0,1,0])
+X2 = np.array([0,0,1])
+trans_top = np.array([0,0,0])
 
 try:
     (trans_top,rot) = li.lookupTransform('/world', '/top', rospy.Time(0))
