@@ -9,6 +9,11 @@ from pyquaternion import Quaternion
 import std_msgs, sensor_msgs
 rospy.init_node('tracker_tf_broadcaster')
 
+# use these to change publishing behaviour
+publish_robot_state = False
+publish_robot_target = False
+publish_robot_state_for_training = True
+
 br = tf.TransformBroadcaster()
 li = tf.TransformListener()
 
@@ -27,6 +32,7 @@ sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg
 sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
 
 joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
+joint_state_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
 
 X0 = np.array([1,0,0])
 X1 = np.array([0,1,0])
@@ -62,15 +68,15 @@ def rotationMatrixToEulerAngles(R) :
 
     return np.array([x, y, z])
 
-try:
-    (trans_top,rot) = li.lookupTransform('/world', '/top', rospy.Time(0))
-    rot_top = Quaternion(rot)
-    top = rot_top.rotation_matrix
-    X0 = np.array(top[0][:])
-    X1 = np.array(top[1][:])
-    X2 = np.array(top[2][:])
-except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-    rospy.loginfo("could not find transform world->top, initialization might be wrong")
+#try:
+#    (trans_top,rot) = li.lookupTransform('/world', '/top', rospy.Time(0))
+#    rot_top = Quaternion(rot)
+#    top = rot_top.rotation_matrix
+#    X0 = np.array(top[0][:])
+#    X1 = np.array(top[1][:])
+#    X2 = np.array(top[2][:])
+#except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+#    rospy.loginfo("could not find transform world->top, initialization might be wrong")
 
 try:
     pose = v.devices["tracker_1"].get_pose_quaternion()
@@ -157,21 +163,32 @@ while not rospy.is_shutdown():
 
     euler = rotationMatrixToEulerAngles(q_top_estimate.rotation_matrix)
 
-    msg = sensor_msgs.msg.JointState()
-    msg.header = std_msgs.msg.Header()
-    msg.header.stamp = rospy.Time.now()
-    msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-    msg.position = [euler[0], euler[1], -euler[2]]
-    msg.velocity = [0,0,0]
-    msg.effort = [0,0,0]
-    joint_state.publish(msg)
-
-    # # use this for joint targets
-    # msg = std_msgs.msg.Float32(euler[0])
-    # sphere_axis0.publish(msg)
-    # msg = std_msgs.msg.Float32(euler[1])
-    # sphere_axis1.publish(msg)
-    # msg = std_msgs.msg.Float32(-euler[2])
-    # sphere_axis2.publish(msg)
+    if publish_robot_state:
+        msg = sensor_msgs.msg.JointState()
+        msg.header = std_msgs.msg.Header()
+        msg.header.stamp = rospy.Time.now()
+        msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
+        msg.position = [euler[0], euler[1], -euler[2]]
+        msg.velocity = [0,0,0]
+        msg.effort = [0,0,0]
+        joint_state.publish(msg)
+    if publish_robot_target:
+       # use this for joint targets
+        msg = std_msgs.msg.Float32(euler[0])
+        sphere_axis0.publish(msg)
+        msg = std_msgs.msg.Float32(euler[1])
+        sphere_axis1.publish(msg)
+        msg = std_msgs.msg.Float32(-euler[2])
+        sphere_axis2.publish(msg) 
+    if publish_robot_state_for_training:
+        msg = sensor_msgs.msg.JointState()
+        msg.header = std_msgs.msg.Header()
+        msg.header.stamp = rospy.Time.now()
+        msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
+        msg.position = [euler[0], euler[1], -euler[2]]
+        msg.velocity = [0,0,0]
+        msg.effort = [0,0,0]
+        joint_state_training.publish(msg)
+    
 
     rospy.loginfo_throttle(5,euler)
