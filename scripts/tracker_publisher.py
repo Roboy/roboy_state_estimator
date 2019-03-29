@@ -4,7 +4,9 @@ import sys
 import rospy
 import tf
 import numpy as np
+import math
 from pyquaternion import Quaternion
+import std_msgs, sensor_msgs
 rospy.init_node('tracker_tf_broadcaster')
 
 br = tf.TransformBroadcaster()
@@ -20,10 +22,45 @@ initial_pose2 = v.devices["tracker_2"].get_pose_quaternion()
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
+sphere_axis0 = rospy.Publisher('/sphere_axis0/sphere_axis0/target', std_msgs.msg.Float32 , queue_size=1)
+sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
+sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
+
+joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
+
 X0 = np.array([1,0,0])
 X1 = np.array([0,1,0])
 X2 = np.array([0,0,1])
 trans_top = np.array([0,0,0])
+
+# Checks if a matrix is a valid rotation matrix.
+def isRotationMatrix(R) :
+    Rt = np.transpose(R)
+    shouldBeIdentity = np.dot(Rt, R)
+    I = np.identity(3, dtype = R.dtype)
+    n = np.linalg.norm(I - shouldBeIdentity)
+    return n < 1e-6
+
+
+# Calculates rotation matrix to euler angles
+def rotationMatrixToEulerAngles(R) :
+
+    assert(isRotationMatrix(R))
+
+    sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+
+    singular = sy < 1e-6
+
+    if  not singular :
+        z = math.atan2(R[2,1] , R[2,2])
+        y = math.atan2(-R[2,0], sy)
+        x = math.atan2(R[1,0], R[0,0])
+    else :
+        z = math.atan2(-R[1,2], R[1,1])
+        y = math.atan2(-R[2,0], sy)
+        x = 0
+
+    return np.array([x, y, z])
 
 try:
     (trans_top,rot) = li.lookupTransform('/world', '/top', rospy.Time(0))
@@ -52,6 +89,7 @@ br.sendTransform([pos_tracker_1[0],pos_tracker_1[1],pos_tracker_1[2]],
 try:
     pose = v.devices["tracker_2"].get_pose_quaternion()
 except:
+
     rospy.loginfo("could not find transform world->tracker_2, initialization might be wrong")
 
 q_tracker_2 = Quaternion(pose[6],pose[3],pose[4],pose[5])                 #*q_init2.inverse
@@ -116,3 +154,24 @@ while not rospy.is_shutdown():
                      rospy.Time.now(),
                      "top_estimate",
                      "world")
+
+    euler = rotationMatrixToEulerAngles(q_top_estimate.rotation_matrix)
+
+    msg = sensor_msgs.msg.JointState()
+    msg.header = std_msgs.msg.Header()
+    msg.header.stamp = rospy.Time.now()
+    msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
+    msg.position = [euler[0], euler[1], -euler[2]]
+    msg.velocity = [0,0,0]
+    msg.effort = [0,0,0]
+    joint_state.publish(msg)
+
+    # # use this for joint targets
+    # msg = std_msgs.msg.Float32(euler[0])
+    # sphere_axis0.publish(msg)
+    # msg = std_msgs.msg.Float32(euler[1])
+    # sphere_axis1.publish(msg)
+    # msg = std_msgs.msg.Float32(-euler[2])
+    # sphere_axis2.publish(msg)
+
+    rospy.loginfo_throttle(5,euler)

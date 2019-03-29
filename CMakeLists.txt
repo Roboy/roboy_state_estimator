@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
 		common_utilities
 		geometry_msgs
 		moveit_msgs
-		aruco_detect
 		sensor_msgs
 		cv_bridge
 		std_msgs
@@ -37,16 +36,16 @@ include_directories(
 #==============================================================================
 # Libraries
 #==============================================================================
-add_executable(roboy_state_estimator include/roboy_state_estimator/roboyStateEstimator.hpp src/roboyStateEstimator.cpp)
-add_dependencies(roboy_state_estimator
-	roboy_middleware_msgs_generate_messages_cpp
-)
-target_link_libraries(roboy_state_estimator ${catkin_LIBRARIES})
+#add_executable(roboy_state_estimator include/roboy_state_estimator/roboyStateEstimator.hpp src/roboyStateEstimator.cpp)
+#add_dependencies(roboy_state_estimator
+#	roboy_middleware_msgs_generate_messages_cpp
+#)
+#target_link_libraries(roboy_state_estimator ${catkin_LIBRARIES})
 #==============================================================================
 # Installation
 #==============================================================================
 install(TARGETS
-		roboy_state_estimator
+
 		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
 
