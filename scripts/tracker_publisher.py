@@ -10,9 +10,9 @@ import std_msgs, sensor_msgs
 rospy.init_node('tracker_tf_broadcaster')
 
 # use these to change publishing behaviour
-publish_robot_state = False
+publish_robot_state = True
 publish_robot_target = False
-publish_robot_state_for_training = True
+publish_robot_state_for_training = False
 
 br = tf.TransformBroadcaster()
 li = tf.TransformListener()
@@ -38,6 +38,8 @@ X0 = np.array([1,0,0])
 X1 = np.array([0,1,0])
 X2 = np.array([0,0,1])
 trans_top = np.array([0,0,0])
+
+align_to_world = Quaternion([0,0,0,1])
 
 # Checks if a matrix is a valid rotation matrix.
 def isRotationMatrix(R) :
@@ -127,7 +129,11 @@ while not rospy.is_shutdown():
     except:
         continue
 
-    q_tracker_1 = Quaternion(pose[6],pose[3],pose[4],pose[5])                 #*q_init1.inverse
+    w = pose[6]
+    x = pose[3]
+    y = pose[4]
+    z = pose[5]
+    q_tracker_1 = Quaternion(w,x,y,z)                   #*q_init1.inverse
 
     pos_tracker_1 = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
 
@@ -140,8 +146,11 @@ while not rospy.is_shutdown():
         pose = v.devices["tracker_2"].get_pose_quaternion()
     except:
         continue
-
-    q_tracker_2 = Quaternion(pose[6],pose[3],pose[4],pose[5])                 #*q_init2.inverse
+    w = pose[6]
+    x = pose[3]
+    y = pose[4]
+    z = pose[5]
+    q_tracker_2 = Quaternion(w,x,y,z)                 #*q_init2.inverse
 
     pos_tracker_2 = np.array([pose[0]-initial_pose2[0],pose[1]-initial_pose2[1],pose[2]-initial_pose2[2]])
 
@@ -151,12 +160,12 @@ while not rospy.is_shutdown():
                      "tracker_2",
                      "world")
 
-    q_tracker_diff = q_tracker_2*q_tracker_1.inverse
 
-    q_top_estimate = q_align*q_tracker_diff
+    q_top_estimate = q_tracker_2*q_tracker_1.inverse
+    rospy.loginfo_throttle(1,q_top_estimate)
 
     br.sendTransform(trans_top,
-                     q_top_estimate,
+                     [q_top_estimate[3],q_top_estimate[2],q_top_estimate[1],q_top_estimate[0]],
                      rospy.Time.now(),
                      "top_estimate",
                      "world")
@@ -168,7 +177,7 @@ while not rospy.is_shutdown():
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
         msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-        msg.position = [euler[0], euler[1], -euler[2]]
+        msg.position = [-euler[0], -euler[1], euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state.publish(msg)
@@ -178,14 +187,14 @@ while not rospy.is_shutdown():
         sphere_axis0.publish(msg)
         msg = std_msgs.msg.Float32(euler[1])
         sphere_axis1.publish(msg)
-        msg = std_msgs.msg.Float32(-euler[2])
+        msg = std_msgs.msg.Float32(euler[2])
         sphere_axis2.publish(msg) 
     if publish_robot_state_for_training:
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
         msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-        msg.position = [euler[0], euler[1], -euler[2]]
+        msg.position = [euler[0], euler[1], euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state_training.publish(msg)
