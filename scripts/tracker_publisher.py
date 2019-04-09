@@ -10,9 +10,9 @@ import std_msgs, sensor_msgs
 rospy.init_node('tracker_tf_broadcaster')
 
 # use these to change publishing behaviour
-publish_robot_state = True
+publish_robot_state = False
 publish_robot_target = False
-publish_robot_state_for_training = False
+publish_robot_state_for_training = True
 
 br = tf.TransformBroadcaster()
 li = tf.TransformListener()
@@ -194,7 +194,7 @@ while not rospy.is_shutdown():
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
         msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-        msg.position = [euler[0], euler[1], euler[2]]
+        msg.position = [-euler[0], -euler[1], euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state_training.publish(msg)
