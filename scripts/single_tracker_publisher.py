@@ -86,7 +86,7 @@ while not rospy.is_shutdown():
     msg = sensor_msgs.msg.JointState()
     msg.header = std_msgs.msg.Header()
     msg.header.stamp = rospy.Time.now()
-    msg.name = ['6dof_axis0', '6dof_axis1', '6dof_axis2', '6dof_axis3', '6dof_axis4', '6dof_axis5']
+    msg.name = ['axis0', 'axis1', 'axis2', 'axis3', 'axis4', 'axis5']
     msg.position = [-euler[0], -euler[1], euler[2], pos_tracker_1[2], -pos_tracker_1[0], pos_tracker_1[1]]
     msg.velocity = [0,0,0]
     msg.effort = [0,0,0]
