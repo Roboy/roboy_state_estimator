@@ -71,7 +71,7 @@ while not rospy.is_shutdown():
     x = pose[3]
     y = pose[4]
     z = pose[5]
-    q_tracker_1 = Quaternion(w,x,y,z)                   #*q_init1.inverse
+    q_tracker_1 = Quaternion(w,x,y,z)*q_init1.inverse
 
     pos_tracker_1 = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
 
@@ -86,8 +86,8 @@ while not rospy.is_shutdown():
     msg = sensor_msgs.msg.JointState()
     msg.header = std_msgs.msg.Header()
     msg.header.stamp = rospy.Time.now()
-    msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-    msg.position = [-euler[0], -euler[1], euler[2]]
+    msg.name = ['6dof_axis0', '6dof_axis1', '6dof_axis2', '6dof_axis3', '6dof_axis4', '6dof_axis5']
+    msg.position = [-euler[0], -euler[1], euler[2], pos_tracker_1[2], -pos_tracker_1[0], pos_tracker_1[1]]
     msg.velocity = [0,0,0]
     msg.effort = [0,0,0]
     joint_state.publish(msg)
