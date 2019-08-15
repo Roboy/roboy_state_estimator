@@ -64,6 +64,7 @@ while not rospy.is_shutdown():
     start = time.time()
     try:
         pose = v.devices["tracker_1"].get_pose_quaternion()
+        # pose = v.devices["tracker_1"].get_pose_quaternion()
     except:
         continue
 

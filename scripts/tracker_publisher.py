@@ -178,7 +178,7 @@ while not rospy.is_shutdown():
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
+        msg.name = ['shoulder_left_axis0', 'shoulder_left_axis1', 'shoulder_left_axis2']
         if head:
             msg.position = [-euler[0], -euler[1], euler[2]]
         if shoulder_left:

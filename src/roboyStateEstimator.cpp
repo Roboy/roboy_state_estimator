@@ -11,23 +11,23 @@ RoboyStateEstimator::RoboyStateEstimator() {
     spinner->start();
 
     joint_state_pub = nh->advertise<sensor_msgs::JointState>("/joint_states", 1);
-    joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
+    // joint_angle_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 //    camera_info_sub = nh->subscribe("/roboy/middleware/joint_angle/elbow_left", 1, &RoboyStateEstimator::JointAngleCB, this);
 
-    left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color/compressed", 1, &RoboyStateEstimator::leftCameraCB, this);
+    // left_zed_camera_sub = nh->subscribe("/zed/left/image_raw_color/compressed", 1, &RoboyStateEstimator::leftCameraCB, this);
 
 //    right_zed_camera_sub = nh->subscribe("/zed/right/image_raw_color/compressed", 1, &RoboyStateEstimator::rightCameraCB, this);
 //
 //    cv::namedWindow(ZED_RIGHT);
 //    moveWindow(ZED_RIGHT, 700, 0);
 
-    camMatrix = Mat(3, 3, CV_32FC1, K_left);
-    distCoeffs = Mat(1, 5, CV_32FC1, D);
+    // camMatrix = Mat(3, 3, CV_32FC1, K_left);
+    // distCoeffs = Mat(1, 5, CV_32FC1, D);
 
-    detectorParams = aruco::DetectorParameters::create();
-    detectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
-    detectorParams->cornerRefinementMaxIterations = 100;
-    dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(cv::aruco::DICT_ARUCO_ORIGINAL));
+    // detectorParams = aruco::DetectorParameters::create();
+    // detectorParams->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    // detectorParams->cornerRefinementMaxIterations = 100;
+    // dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(cv::aruco::DICT_ARUCO_ORIGINAL));
 
 
 //    joint_angle_estimator_thread.reset(new boost::thread(&RoboyStateEstimator::estimateJointAngles, this));
