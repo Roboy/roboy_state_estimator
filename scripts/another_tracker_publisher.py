@@ -24,8 +24,8 @@ v.print_discovered_objects()
 
 interval = 1/10
 
-initial_pose1 = v.devices["tracker_1"].get_pose_quaternion()
-initial_pose2 = v.devices["tracker_2"].get_pose_quaternion() 
+initial_pose1 = v.devices["tracker_2"].get_pose_quaternion()
+initial_pose2 = v.devices["tracker_3"].get_pose_quaternion() #link
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
@@ -102,7 +102,7 @@ def rotationMatrixToEulerAngles(R) :
 #                  "tracker_1",
 #                  "world")
 # try:
-#     pose = v.devices["tracker_2"].get_pose_quaternion()
+#     pose = v.devices["tracker_3"].get_pose_quaternion()
 # except:
 #
 #     rospy.loginfo("could not find transform world->tracker_2, initialization might be wrong")
@@ -114,7 +114,7 @@ def rotationMatrixToEulerAngles(R) :
 # br.sendTransform([pos_tracker_2[0],pos_tracker_2[1],pos_tracker_2[2]],
 #                  q_tracker_2,
 #                  rospy.Time.now(),
-#                  "tracker_2",
+#                  "tracker_3",
 #                  "world")
 #
 # q_tracker_diff = q_tracker_2*q_tracker_1.inverse
@@ -155,7 +155,7 @@ while not rospy.is_shutdown():
                      "tracker_1",
                      "world")
     try:
-        pose = v.devices["tracker_2"].get_pose_quaternion()
+        pose = v.devices["tracker_3"].get_pose_quaternion()
     except:
         continue
     w = pose[6]
@@ -169,7 +169,7 @@ while not rospy.is_shutdown():
     br.sendTransform([pos_tracker_2[0],pos_tracker_2[1],pos_tracker_2[2]],
                      q_tracker_2,
                      rospy.Time.now(),
-                     "tracker_2",
+                     "tracker_3",
                      "world")
 
 
@@ -188,11 +188,11 @@ while not rospy.is_shutdown():
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
+        msg.name = ['shoulder_left_axis0', 'shoulder_left_axis1', 'shoulder_left_axis2']
         if head:
             msg.position = [-euler[0], -euler[1], euler[2]]
         if shoulder_left:
-            msg.position = [euler[0], euler[1], -euler[2]]
+            msg.position = [euler[0], euler[1], euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state.publish(msg)
@@ -212,7 +212,7 @@ while not rospy.is_shutdown():
         if head:
             msg.position = [-euler[0], -euler[1], euler[2]]
         if shoulder_left:
-            msg.position = [euler[0], euler[1], euler[2]]
+            msg.position = [euler[0], euler[1], -euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state_training.publish(msg)

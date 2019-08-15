@@ -25,7 +25,7 @@ v.print_discovered_objects()
 interval = 1/10
 
 initial_pose1 = v.devices["tracker_1"].get_pose_quaternion()
-initial_pose2 = v.devices["tracker_2"].get_pose_quaternion() 
+initial_pose2 = v.devices["tracker_2"].get_pose_quaternion()
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
@@ -42,6 +42,10 @@ X2 = np.array([0,0,1])
 trans_top = np.array([0,0,0])
 
 align_to_world = Quaternion([0,0,0,1])
+
+initial_pose3 = v.devices["tracker_3"].get_pose_quaternion()
+q_init3 = Quaternion(initial_pose3[6],initial_pose3[3],initial_pose3[4],initial_pose3[5])
+
 
 # Checks if a matrix is a valid rotation matrix.
 def isRotationMatrix(R) :
@@ -72,66 +76,7 @@ def rotationMatrixToEulerAngles(R) :
 
     return np.array([x, y, z])
 
-#try:
-#    (trans_top,rot) = li.lookupTransform('/world', '/top', rospy.Time(0))
-#    rot_top = Quaternion(rot)
-#    top = rot_top.rotation_matrix
-#    X0 = np.array(top[0][:])
-#    X1 = np.array(top[1][:])
-#    X2 = np.array(top[2][:])
-#except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-#    rospy.loginfo("could not find transform world->top, initialization might be wrong")
-
-
-
-
-
-# -----
-# try:
-#     pose = v.devices["tracker_1"].get_pose_quaternion()
-# except:
-#     rospy.loginfo("could not find transform world->tracker_1, initialization might be wrong")
-#
-# q_tracker_1 = Quaternion(pose[6],pose[3],pose[4],pose[5])                 #*q_init1.inverse
-#
-# pos_tracker_1 = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
-#
-# br.sendTransform([pos_tracker_1[0],pos_tracker_1[1],pos_tracker_1[2]],
-#                  q_tracker_1,
-#                  rospy.Time.now(),
-#                  "tracker_1",
-#                  "world")
-# try:
-#     pose = v.devices["tracker_2"].get_pose_quaternion()
-# except:
-#
-#     rospy.loginfo("could not find transform world->tracker_2, initialization might be wrong")
-#
-# q_tracker_2 = Quaternion(pose[6],pose[3],pose[4],pose[5])                 #*q_init2.inverse
-#
-# pos_tracker_2 = np.array([pose[0]-initial_pose2[0],pose[1]-initial_pose2[1],pose[2]-initial_pose2[2]])
-#
-# br.sendTransform([pos_tracker_2[0],pos_tracker_2[1],pos_tracker_2[2]],
-#                  q_tracker_2,
-#                  rospy.Time.now(),
-#                  "tracker_2",
-#                  "world")
-#
-# q_tracker_diff = q_tracker_2*q_tracker_1.inverse
-#
-# tracker_diff = q_tracker_diff.rotation_matrix
-#
-# Y0 = np.array(tracker_diff[0][:])
-# Y1 = np.array(tracker_diff[1][:])
-# Y2 = np.array(tracker_diff[2][:])
-#
-# rot_align = np.array([[X0.dot(Y0),X0.dot(Y1),X0.dot(Y2)],[X1.dot(Y0),X1.dot(Y1),X1.dot(Y2)],[X2.dot(Y0),X2.dot(Y1),X2.dot(Y2)]])
-#
-# q_align = Quaternion(matrix=rot_align)
-
-
-
-
+first = True
 
 
 while not rospy.is_shutdown():
@@ -139,8 +84,9 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_1"].get_pose_quaternion()
     except:
+        rospy.logerr("tracker 1 lost")
         continue
-
+    pos1 = pose
     w = pose[6]
     x = pose[3]
     y = pose[4]
@@ -157,7 +103,10 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_2"].get_pose_quaternion()
     except:
+        rospy.logerr("tracker 2 lost")
         continue
+
+    pos2 = pose
     w = pose[6]
     x = pose[3]
     y = pose[4]
@@ -182,40 +131,107 @@ while not rospy.is_shutdown():
                      "top_estimate",
                      "world")
 
-    euler = rotationMatrixToEulerAngles(q_top_estimate.rotation_matrix)
+    euler2 = rotationMatrixToEulerAngles(q_top_estimate.rotation_matrix)
+
+
+
+
+    try:
+        pose = v.devices["tracker_1"].get_pose_quaternion()
+    except:
+        rospy.logerr("tracker 1 lost")
+        continue
+    pos1 = pose
+    w = pose[6]
+    x = pose[3]
+    y = pose[4]
+    z = pose[5]
+    q_tracker_1 = Quaternion(w,x,y,z)                   #*q_init1.inverse
+
+    pos_tracker_1 = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
+
+    br.sendTransform([pos_tracker_1[0],pos_tracker_1[1],pos_tracker_1[2]],
+                     q_tracker_1,
+                     rospy.Time.now(),
+                     "tracker_1",
+                     "world")
+    try:
+        pose = v.devices["tracker_3"].get_pose_quaternion()
+    except:
+        rospy.logerr("tracker 3 lost")
+        continue
+    pos3 = pose
+    w = pose[6]
+    x = pose[3]
+    y = pose[4]
+    z = pose[5]
+    q_tracker_3 = Quaternion(w,x,y,z)                 #*q_init2.inverse
+
+    pos_tracker_3 = np.array([pose[0]-initial_pose3[0],pose[1]-initial_pose3[1],pose[2]-initial_pose3[2]])
+
+    br.sendTransform([pos_tracker_3[0],pos_tracker_3[1],pos_tracker_3[2]],
+                     q_tracker_3,
+                     rospy.Time.now(),
+                     "tracker_3",
+                     "world")
+
+
+    q_top_estimate = q_tracker_1*q_tracker_3.inverse
+    rospy.loginfo_throttle(1,q_top_estimate)
+
+    br.sendTransform(trans_top,
+                     [q_top_estimate[3],q_top_estimate[2],q_top_estimate[1],q_top_estimate[0]],
+                     rospy.Time.now(),
+                     "top_estimate",
+                     "world")
+
+    euler3 = rotationMatrixToEulerAngles(q_top_estimate.rotation_matrix)
+
+    # if first:
+    #     prev_euler2 = euler2
+    #     prev_euler3 = euler3
+    #     first = False
+
+
+    lost = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+
+    if pos1 == lost or pos2 == lost or pos3 == lost:
+        rospy.logerr("Skipping. Either of trackers is lost.")
+        continue
+
 
     if publish_robot_state:
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
-        if head:
-            msg.position = [-euler[0], -euler[1], euler[2]]
-        if shoulder_left:
-            msg.position = [euler[0], euler[1], -euler[2]]
-        msg.velocity = [0,0,0]
-        msg.effort = [0,0,0]
+        msg.name = ['shoulder_left_axis0', 'shoulder_left_axis1', 'shoulder_left_axis2', 'shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
+        # if head:
+        #     msg.position = [-euler[0], -euler[1], euler[2]]
+        # if shoulder_left:
+        msg.position = [euler3[0], euler3[1], -euler3[2], euler2[0], euler2[1], -euler2[2]]
+        msg.velocity = [0,0,0,0,0,0]
+        msg.effort = [0,0,0,0,0,0]
         joint_state.publish(msg)
-    if publish_robot_target:
-       # use this for joint targets
-        msg = std_msgs.msg.Float32(euler[0])
-        sphere_axis0.publish(msg)
-        msg = std_msgs.msg.Float32(euler[1])
-        sphere_axis1.publish(msg)
-        msg = std_msgs.msg.Float32(euler[2])
-        sphere_axis2.publish(msg)
-    if publish_robot_state_for_training:
-        msg = sensor_msgs.msg.JointState()
-        msg.header = std_msgs.msg.Header()
-        msg.header.stamp = rospy.Time.now()
-        msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-        if head:
-            msg.position = [-euler[0], -euler[1], euler[2]]
-        if shoulder_left:
-            msg.position = [euler[0], euler[1], euler[2]]
-        msg.velocity = [0,0,0]
-        msg.effort = [0,0,0]
-        joint_state_training.publish(msg)
+    # if publish_robot_target:
+    #    # use this for joint targets
+    #     msg = std_msgs.msg.Float32(euler[0])
+    #     sphere_axis0.publish(msg)
+    #     msg = std_msgs.msg.Float32(euler[1])
+    #     sphere_axis1.publish(msg)
+    #     msg = std_msgs.msg.Float32(euler[2])
+    #     sphere_axis2.publish(msg)
+    # if publish_robot_state_for_training:
+    #     msg = sensor_msgs.msg.JointState()
+    #     msg.header = std_msgs.msg.Header()
+    #     msg.header.stamp = rospy.Time.now()
+    #     msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
+    #     if head:
+    #         msg.position = [-euler[0], -euler[1], euler[2]]
+    #     if shoulder_left:
+    #         msg.position = [euler[0], euler[1], euler[2]]
+    #     msg.velocity = [0,0,0]
+    #     msg.effort = [0,0,0]
+    #     joint_state_training.publish(msg)
 
 
-    rospy.loginfo_throttle(5,euler)
+    # rospy.loginfo_throttle(5,euler)
