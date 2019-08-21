@@ -29,9 +29,9 @@ initial_pose2 = v.devices["tracker_2"].get_pose_quaternion()
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
-sphere_axis0 = rospy.Publisher('/sphere_axis0/sphere_axis0/target', std_msgs.msg.Float32 , queue_size=1)
-sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
-sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
+# sphere_axis0 = rospy.Publisher('/sphere_axis0/sphere_axis0/target', std_msgs.msg.Float32 , queue_size=1)
+# sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
+# sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
 
 joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
 joint_state_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
@@ -84,7 +84,7 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_1"].get_pose_quaternion()
     except:
-        rospy.logerr("tracker 1 lost")
+        rospy.logwarn("tracker 1 lost")
         continue
     pos1 = pose
     w = pose[6]
@@ -103,7 +103,7 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_2"].get_pose_quaternion()
     except:
-        rospy.logerr("tracker 2 lost")
+        rospy.logwarn("tracker 2 lost")
         continue
 
     pos2 = pose
@@ -139,7 +139,7 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_1"].get_pose_quaternion()
     except:
-        rospy.logerr("tracker 1 lost")
+        rospy.logwarn("tracker 1 lost")
         continue
     pos1 = pose
     w = pose[6]
@@ -158,7 +158,7 @@ while not rospy.is_shutdown():
     try:
         pose = v.devices["tracker_3"].get_pose_quaternion()
     except:
-        rospy.logerr("tracker 3 lost")
+        rospy.logwarn("tracker 3 lost")
         continue
     pos3 = pose
     w = pose[6]
@@ -196,7 +196,7 @@ while not rospy.is_shutdown():
     lost = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
 
     if pos1 == lost or pos2 == lost or pos3 == lost:
-        rospy.logerr("Skipping. Either of trackers is lost.")
+        rospy.logwarn("Skipping. Either of trackers is lost.")
         continue
 
 
@@ -208,10 +208,13 @@ while not rospy.is_shutdown():
         # if head:
         #     msg.position = [-euler[0], -euler[1], euler[2]]
         # if shoulder_left:
-        msg.position = [euler3[0], euler3[1], -euler3[2], euler2[0], euler2[1], -euler2[2]]
+        msg.position = [euler2[0], euler2[1], -euler2[2], euler3[0], euler3[1], -euler3[2]]
         msg.velocity = [0,0,0,0,0,0]
         msg.effort = [0,0,0,0,0,0]
         joint_state.publish(msg)
+        if publish_robot_state_for_training:
+           joint_state_training.publish(msg)
+
     # if publish_robot_target:
     #    # use this for joint targets
     #     msg = std_msgs.msg.Float32(euler[0])
