@@ -30,7 +30,7 @@ right = "tracker_2"
 left = "tracker_3"
 torso = "tracker_1"
 
-track_left = True
+track_left = False
 track_right = True
 
 initial_pose_torso = v.devices[torso].get_pose_quaternion()
@@ -78,12 +78,12 @@ def rotationMatrixToEulerAngles(R) :
     return np.array([x, y, z])
 
 
-def calculateEuler(base, link, initial_pose_base, initial_pose_link):
+def calculateEuler(link, base, initial_pose_link, initial_pose_base):
     try:
-        pose = v.devices[base].get_pose_quaternion()
+        pose = v.devices[link].get_pose_quaternion()
     except:
-        rospy.logerr("Could not find device %s"%base)
-        return 
+        rospy.logerr("Could not find device %s"%link)
+        return
 
     q_init = Quaternion(pose[6],pose[3],pose[4],pose[5])
 
@@ -93,7 +93,7 @@ def calculateEuler(base, link, initial_pose_base, initial_pose_link):
     z = pose[5]
     q_base = Quaternion(w,x,y,z)
 
-    pos_base = np.array([pose[0]-initial_pose_base[0],pose[1]-initial_pose_base[1],pose[2]-initial_pose_base[2]])
+    pos_base = np.array([pose[0],pose[1],pose[2]])
 
     br.sendTransform([pos_base[0],pos_base[1],pos_base[2]],
                      q_base,
@@ -127,14 +127,14 @@ def calculateEuler(base, link, initial_pose_base, initial_pose_link):
 
 while not rospy.is_shutdown():
     start = time.time()
-    left_euler = None
+    left_euler = [0,0,0]
     right_euler = None
 
     if track_left:
         left_euler = calculateEuler(left, right, initial_pose_left, initial_pose_right)
     if track_right:
         right_euler = calculateEuler(torso, right, initial_pose_torso, initial_pose_right)
-    
+
     if left_euler is None or right_euler is None:
         rospy.logerr("Skipping publishing to joint_state")
         continue
@@ -146,8 +146,7 @@ while not rospy.is_shutdown():
         msg.name = ["shoulder_left_axis0","shoulder_left_axis1","shoulder_left_axis2","shoulder_right_axis0","shoulder_right_axis1","shoulder_right_axis2"]
         msg.velocity = [0,0,0,0,0,0]
         msg.effort = [0,0,0,0,0,0]
-        msg.position = [left_euler[0], left_euler[1], -left_euler[2], right_euler[0], right_euler[1], right_euler[2]]        
+        msg.position = [left_euler[0], left_euler[1], -left_euler[2], right_euler[0], right_euler[1], right_euler[2]]
         joint_state.publish(msg)
         if publish_robot_state_for_training:
             joint_state_training.publish(msg)
-

@@ -33,7 +33,7 @@ q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_
 # sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
 # sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
 
-joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
+joint_state = rospy.Publisher('/external_joint_states', sensor_msgs.msg.JointState , queue_size=1)
 joint_state_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
 
 X0 = np.array([1,0,0])

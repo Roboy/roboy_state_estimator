@@ -8,7 +8,7 @@ import math
 from pyquaternion import Quaternion
 import std_msgs, sensor_msgs
 
-tracker_name = "tracker_1"
+tracker_name = "tracker_2"
 
 rospy.init_node('tracker_tf_broadcaster')
 br = tf.TransformBroadcaster()
@@ -63,8 +63,8 @@ def rotationMatrixToEulerAngles(R) :
 while not rospy.is_shutdown():
     start = time.time()
     try:
-        pose = v.devices["tracker_1"].get_pose_quaternion()
-        # pose = v.devices["tracker_1"].get_pose_quaternion()
+        pose = v.devices["tracker_2"].get_pose_quaternion()
+        # pose = v.devices["tracker_2"].get_pose_quaternion()
     except:
         continue
 
@@ -79,7 +79,7 @@ while not rospy.is_shutdown():
     br.sendTransform([pos_tracker_1[0],pos_tracker_1[1],pos_tracker_1[2]],
                      q_tracker_1,
                      rospy.Time.now(),
-                     "tracker_1",
+                     "tracker_2",
                      "world")
 
     euler = rotationMatrixToEulerAngles(q_tracker_1.rotation_matrix)
@@ -91,6 +91,6 @@ while not rospy.is_shutdown():
     msg.position = [-euler[0], -euler[1], euler[2], pos_tracker_1[2], -pos_tracker_1[0], pos_tracker_1[1]]
     msg.velocity = [0,0,0]
     msg.effort = [0,0,0]
-    joint_state.publish(msg)
+    # joint_state.publish(msg)
 
     rospy.loginfo_throttle(5,euler)

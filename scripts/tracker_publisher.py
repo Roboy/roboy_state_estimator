@@ -33,7 +33,7 @@ sphere_axis0 = rospy.Publisher('/sphere_axis0/sphere_axis0/target', std_msgs.msg
 sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
 sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
 
-joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
+joint_state = rospy.Publisher('/external_joint_states', sensor_msgs.msg.JointState , queue_size=1)
 joint_state_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
 
 X0 = np.array([1,0,0])
@@ -136,16 +136,22 @@ def rotationMatrixToEulerAngles(R) :
 
 while not rospy.is_shutdown():
     start = time.time()
+    lost = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+
     try:
         pose = v.devices["tracker_1"].get_pose_quaternion()
     except:
+        continue
+    
+    if pose == lost:
+        rospy.logwarn("lost tracking. skipping")
         continue
 
     w = pose[6]
     x = pose[3]
     y = pose[4]
     z = pose[5]
-    q_tracker_1 = Quaternion(w,x,y,z)                   #*q_init1.inverse
+    q_tracker_1 = Quaternion(w,x,y,z).unit                   #*q_init1.inverse
 
     pos_tracker_1 = np.array([pose[0]-initial_pose1[0],pose[1]-initial_pose1[1],pose[2]-initial_pose1[2]])
 
@@ -158,11 +164,16 @@ while not rospy.is_shutdown():
         pose = v.devices["tracker_2"].get_pose_quaternion()
     except:
         continue
+    
+    if pose == lost:
+        rospy.logwarn("lost tracking. skipping")
+        continue    
+    
     w = pose[6]
     x = pose[3]
     y = pose[4]
     z = pose[5]
-    q_tracker_2 = Quaternion(w,x,y,z)                 #*q_init2.inverse
+    q_tracker_2 = Quaternion(w,x,y,z).unit                 #*q_init2.inverse
 
     pos_tracker_2 = np.array([pose[0]-initial_pose2[0],pose[1]-initial_pose2[1],pose[2]-initial_pose2[2]])
 
@@ -174,6 +185,7 @@ while not rospy.is_shutdown():
 
 
     q_top_estimate = q_tracker_1*q_tracker_2.inverse
+    q_top_estimate = q_top_estimate.unit
     rospy.loginfo_throttle(1,q_top_estimate)
 
     br.sendTransform(trans_top,
@@ -196,26 +208,9 @@ while not rospy.is_shutdown():
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         joint_state.publish(msg)
-    if publish_robot_target:
-       # use this for joint targets
-        msg = std_msgs.msg.Float32(euler[0])
-        sphere_axis0.publish(msg)
-        msg = std_msgs.msg.Float32(euler[1])
-        sphere_axis1.publish(msg)
-        msg = std_msgs.msg.Float32(euler[2])
-        sphere_axis2.publish(msg)
-    if publish_robot_state_for_training:
-        msg = sensor_msgs.msg.JointState()
-        msg.header = std_msgs.msg.Header()
-        msg.header.stamp = rospy.Time.now()
-        msg.name = ['sphere_axis0', 'sphere_axis1', 'sphere_axis2']
-        if head:
-            msg.position = [-euler[0], -euler[1], euler[2]]
-        if shoulder_left:
-            msg.position = [euler[0], euler[1], euler[2]]
-        msg.velocity = [0,0,0]
-        msg.effort = [0,0,0]
-        joint_state_training.publish(msg)
+        if publish_robot_state_for_training:
+            joint_state_training.publish(msg)
 
 
     rospy.loginfo_throttle(5,euler)
+    rospy.sleep(0.001)

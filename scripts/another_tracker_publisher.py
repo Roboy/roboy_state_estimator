@@ -24,8 +24,8 @@ v.print_discovered_objects()
 
 interval = 1/10
 
-initial_pose1 = v.devices["tracker_2"].get_pose_quaternion()
-initial_pose2 = v.devices["tracker_3"].get_pose_quaternion() #link
+initial_pose1 = v.devices["tracker_1"].get_pose_quaternion()
+initial_pose2 = v.devices["tracker_2"].get_pose_quaternion() #link
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
@@ -33,7 +33,7 @@ sphere_axis0 = rospy.Publisher('/sphere_axis0/sphere_axis0/target', std_msgs.msg
 sphere_axis1 = rospy.Publisher('/sphere_axis1/sphere_axis1/target', std_msgs.msg.Float32 , queue_size=1)
 sphere_axis2 = rospy.Publisher('/sphere_axis2/sphere_axis2/target', std_msgs.msg.Float32 , queue_size=1)
 
-joint_state = rospy.Publisher('/joint_states', sensor_msgs.msg.JointState , queue_size=1)
+joint_state = rospy.Publisher('/external_joint_states', sensor_msgs.msg.JointState , queue_size=1)
 joint_state_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
 
 X0 = np.array([1,0,0])
@@ -188,7 +188,7 @@ while not rospy.is_shutdown():
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['shoulder_left_axis0', 'shoulder_left_axis1', 'shoulder_left_axis2']
+        msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
         if head:
             msg.position = [-euler[0], -euler[1], euler[2]]
         if shoulder_left:
