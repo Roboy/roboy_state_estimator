@@ -29,7 +29,8 @@ initial_pose2 = v.devices["tracker_2"].get_pose_quaternion()
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
-robot_state = rospy.Publisher('/external_joint_states', sensor_msgs.msg.JointState , queue_size=1)
+external_joint_states = rospy.Publisher('/external_joint_states', sensor_msgs.msg.JointState , queue_size=1)
+joint_states_training = rospy.Publisher('/joint_states_training', sensor_msgs.msg.JointState , queue_size=1)
 joint_state_target = rospy.Publisher('/joint_state_target', sensor_msgs.msg.JointState , queue_size=1)
 
 X0 = np.array([1,0,0])
@@ -141,7 +142,8 @@ while not rospy.is_shutdown():
             msg.position = [euler[0], euler[1], -euler[2]]
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
-        robot_state.publish(msg)
+        external_joint_states.publish(msg)
+        joint_states_training.publish(msg)
 
 
     rospy.loginfo_throttle(5,euler)
