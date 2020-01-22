@@ -13,7 +13,8 @@ rospy.init_node('tracker_tf_broadcaster')
 publish_robot_state = True
 publish_robot_target = False
 
-head = True
+head = False
+shoulder_right = True
 shoulder_left = False
 
 br = tf.TransformBroadcaster()
@@ -135,11 +136,15 @@ while not rospy.is_shutdown():
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['head_axis0', 'head_axis1', 'head_axis2']
+        msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
+        # msg.name = ['head_axis0', 'head_axis1', 'head_axis2']
         if head:
             msg.position = [euler[0], euler[1], -euler[2]]
         if shoulder_left:
             msg.position = [euler[0], euler[1], -euler[2]]
+        if shoulder_right:
+            msg.position = [euler[0], -euler[1], euler[2]]
+
         msg.velocity = [0,0,0]
         msg.effort = [0,0,0]
         external_joint_states.publish(msg)
