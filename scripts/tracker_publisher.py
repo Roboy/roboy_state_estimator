@@ -25,8 +25,11 @@ v.print_discovered_objects()
 
 interval = 1/10
 
-initial_pose1 = v.devices["tracker_1"].get_pose_quaternion()
-initial_pose2 = v.devices["tracker_2"].get_pose_quaternion() 
+tracker_1 = "tracker_1"
+tracker_2 = "tracker_2"
+
+initial_pose1 = v.devices[tracker_1].get_pose_quaternion()
+initial_pose2 = v.devices[tracker_2].get_pose_quaternion() 
 q_init1 = Quaternion(initial_pose1[6],initial_pose1[3],initial_pose1[4],initial_pose1[5])
 q_init2 = Quaternion(initial_pose2[6],initial_pose2[3],initial_pose2[4],initial_pose2[5])
 
@@ -75,7 +78,7 @@ while not rospy.is_shutdown():
     lost = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
 
     try:
-        pose = v.devices["tracker_1"].get_pose_quaternion()
+        pose = v.devices[tracker_1].get_pose_quaternion()
     except:
         continue
     
@@ -94,10 +97,10 @@ while not rospy.is_shutdown():
     br.sendTransform([pos_tracker_1[0],pos_tracker_1[1],pos_tracker_1[2]],
                      q_tracker_1,
                      rospy.Time.now(),
-                     "tracker_1",
+                     tracker_1,
                      "world")
     try:
-        pose = v.devices["tracker_2"].get_pose_quaternion()
+        pose = v.devices[tracker_2].get_pose_quaternion()
     except:
         continue
     
@@ -116,7 +119,7 @@ while not rospy.is_shutdown():
     br.sendTransform([pos_tracker_2[0],pos_tracker_2[1],pos_tracker_2[2]],
                      q_tracker_2,
                      rospy.Time.now(),
-                     "tracker_2",
+                     tracker_2,
                      "world")
 
 
@@ -136,7 +139,11 @@ while not rospy.is_shutdown():
         msg = sensor_msgs.msg.JointState()
         msg.header = std_msgs.msg.Header()
         msg.header.stamp = rospy.Time.now()
-        msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
+
+        # msg.name = ['shoulder_right_axis0', 'shoulder_right_axis1', 'shoulder_right_axis2']
+
+        msg.name = ['shoulder_left_axis0', 'shoulder_left_axis1', 'shoulder_left_axis2']
+
         # msg.name = ['head_axis0', 'head_axis1', 'head_axis2']
         if head:
             msg.position = [euler[0], euler[1], -euler[2]]
