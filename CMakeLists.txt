@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 		roboy_middleware_msgs
 		common_utilities
 		geometry_msgs
-		moveit_msgs
+		# moveit_msgs
 		sensor_msgs
 		cv_bridge
 		std_msgs
